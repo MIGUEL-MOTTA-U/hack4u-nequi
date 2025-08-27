@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Shield, Lock, AlertTriangle, Eye, EyeOff } from 'lucide-react';
-import { passwords } from '../../api/axios';
 import type { PasswordApi } from '../../types/api';
 import { useApiContext } from '../../context/ApiContext';
 import { Link } from 'react-router-dom';
@@ -13,6 +12,62 @@ const PasswordChecker: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
+  const evaluatePasswordLocally = (password: string): PasswordApi => {
+    const suggestions: string[] = [];
+    let warning: string | null = null;
+
+    const length = password.length;
+    const hasLower = /[a-z]/.test(password);
+    const hasUpper = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSymbol = /[^A-Za-z0-9]/.test(password);
+
+    const varietyCount = [hasLower, hasUpper, hasNumber, hasSymbol].filter(Boolean).length;
+
+    const commonPasswords = new Set([
+      '123456','password','123456789','qwerty','12345678','111111','123123','abc123','password1','qwerty123',
+      'iloveyou','admin','welcome','monkey','dragon','letmein','football','baseball','princess','login'
+    ]);
+
+    const isCommon = commonPasswords.has(password.toLowerCase());
+
+    const isSequential = /(?:0123|1234|2345|3456|4567|5678|6789|abcd|bcde|cdef|defg|efgh|fghi|ghij)/i.test(password);
+    const hasRepeats = /(.)\1{2,}/.test(password);
+
+    let score = 0;
+    if (length >= 8) score += 1;
+    if (length >= 12) score += 1;
+    if (varietyCount >= 3) score += 1;
+    if (varietyCount === 4) score += 1;
+
+    if (isCommon || isSequential || hasRepeats) {
+      score = Math.max(0, score - 2);
+      warning = 'Patrones débiles detectados (común, secuencias o repeticiones).';
+    }
+
+    if (length < 8) suggestions.push('Usa al menos 8 caracteres.');
+    if (length < 12) suggestions.push('Mejor si tiene 12+ caracteres.');
+    if (!hasLower) suggestions.push('Agrega letras minúsculas.');
+    if (!hasUpper) suggestions.push('Agrega letras mayúsculas.');
+    if (!hasNumber) suggestions.push('Incluye números.');
+    if (!hasSymbol) suggestions.push('Incluye símbolos.');
+    if (isSequential) suggestions.push('Evita secuencias como 1234 o abcd.');
+    if (hasRepeats) suggestions.push('Evita caracteres repetidos (p. ej., aaa).');
+    if (isCommon) suggestions.push('No uses contraseñas muy comunes.');
+
+    score = Math.max(0, Math.min(4, score));
+
+    return {
+      strength: {
+        score,
+        suggestions,
+        warning,
+      },
+      // Sin consulta a brechas externas en modo local
+      pwnedCount: 0,
+    };
+  };
+
   const handlePasswordSubmit = useCallback(async (pass?: string) => {
     const passwordToCheck = pass || passwordInput;
     if (!passwordToCheck.trim()) return;
@@ -20,7 +75,8 @@ const PasswordChecker: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await passwords(passwordToCheck);
+      // Evaluación local sin llamadas de red
+      const data = evaluatePasswordLocally(passwordToCheck);
       setPasswordCheck(data);
     } catch {
       setError('No se pudieron obtener los resultados. Por favor, intenta de nuevo.');
@@ -82,8 +138,10 @@ const PasswordChecker: React.FC = () => {
             <nav className="hidden md:flex space-x-8">
               <Link to="/breach-guard" className="text-gray-600 hover:text-red-600 font-medium">Inicio</Link>
               <Link to="/password-check" className="text-gray-600 hover:text-red-600 font-medium">Contraseñas</Link>
-              <a href="https://transacciones-nequi.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600 font-medium">Nequi</a>
-              <a href="https://enlace-academico-escuelaing-edu-co.azurewebsites.net" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600 font-medium">Enlace</a>
+              <a href="https://instagrann.azurewebsites.net/" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600 font-medium">Instagram</a>
+              <a href="https://enlace-academico-escuelaing-edu-co.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600 font-medium">Enlace</a>
+              <a href="https://cybermap.kaspersky.com/es" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600 font-medium">Kaspersky Map</a>
+              <a href="https://livethreatmap.radware.com/" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600 font-medium">Radware Map</a>
             </nav>
           </div>
         </div>

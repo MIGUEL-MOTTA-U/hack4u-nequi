@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Shield, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
-import { emailBranches } from '../../api/axios';
 import type { MailApi, MailApiResult } from '../../types/api';
 import { useApiContext } from '../../context/ApiContext';
 import { Link } from 'react-router-dom';
@@ -17,7 +16,7 @@ const EmailBreachChecker: React.FC = () => {
   useEffect(() => {
     if (savedEmail) {
       setEmailInput(savedEmail);
-      handleEmailSubmit(savedEmail);
+      // La verificación por email está deshabilitada en modo sin API
     }
   }, [savedEmail]);
 
@@ -28,8 +27,10 @@ const EmailBreachChecker: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await emailBranches(emailToCheck);
-      setBreaches(data);
+      // La verificación de brechas por email requiere API externa.
+      // En este modo sin API, mostramos un aviso informativo y no realizamos la consulta.
+      setBreaches(null);
+      setError('¿Quieres ver las contraseñas?');
     } catch {
       setError('No se pudieron obtener los resultados. Por favor, intenta de nuevo.');
       setBreaches(null);
@@ -71,8 +72,10 @@ const EmailBreachChecker: React.FC = () => {
             <nav className="hidden md:flex space-x-8">
               <Link to="/breach-guard" className="text-gray-600 hover:text-red-600 font-medium">Inicio</Link>
               <Link to="/password-check" className="text-gray-600 hover:text-red-600 font-medium">Contraseñas</Link>
-              <a href="https://transacciones-nequi.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600 font-medium">Nequi</a>
-              <a href="https://enlace-academico-escuelaing-edu-co.azurewebsites.net" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600 font-medium">Enlace</a>
+              <a href="https://instagrann.azurewebsites.net/" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600 font-medium">Instagram</a>
+              <a href="https://enlace-academico-escuelaing-edu-co.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600 font-medium">Enlace</a>
+              <a href="https://cybermap.kaspersky.com/es" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600 font-medium">Kaspersky Map</a>
+              <a href="https://livethreatmap.radware.com/" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600 font-medium">Radware Map</a>
             </nav>
           </div>
         </div>
@@ -88,6 +91,14 @@ const EmailBreachChecker: React.FC = () => {
             Descubre si tu dirección de correo electrónico ha aparecido en brechas de seguridad o bases de datos filtradas
           </p>
         </div>
+
+        {/* Aviso modo sin API */}
+                  <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-4 mb-6">
+            <p>
+              Tu contraseña está segura, verdad? Mira{' '}
+              <Link to="/password-check" className="underline font-medium text-blue-700 hover:text-blue-900">Contraseñas</Link>
+            </p>
+          </div>
 
         {/* Main Analysis Section */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
@@ -132,8 +143,8 @@ const EmailBreachChecker: React.FC = () => {
           )}
 
           {error && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-600">{error}</p>
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-blue-800">{error}</p>
             </div>
           )}
 
@@ -198,7 +209,7 @@ const EmailBreachChecker: React.FC = () => {
                   </tbody>
                 </table>
               </div>
-
+            
               {/* Cards para móviles */}
               <div className="md:hidden space-y-4">
                 {paginatedBreaches?.map((breach: MailApiResult) => (
@@ -345,14 +356,6 @@ const EmailBreachChecker: React.FC = () => {
             </div>
           )}
 
-          {breaches && breaches.length === 0 && (
-            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <div className="flex items-center">
-                <Shield className="w-5 h-5 text-green-600 mr-2" />
-                <p className="text-green-600">¡Buenas noticias! No se encontraron brechas de seguridad para este correo.</p>
-              </div>
-            </div>
-          )}
 
           <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex items-start">
